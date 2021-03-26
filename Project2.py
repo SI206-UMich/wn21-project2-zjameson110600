@@ -4,6 +4,7 @@ import re
 import os
 import csv
 import unittest
+#worked with: Grace Coleman
 
 
 def get_titles_from_search_results(filename):
@@ -31,7 +32,6 @@ def get_titles_from_search_results(filename):
     for i in range(len(bookTitles)):
         tup = (bookInfo[i], authorsList[i])
         information.append(tup)
-    #print(information)
     return information
 
 
@@ -43,8 +43,8 @@ def get_search_links():
 
     ['https://www.goodreads.com/book/show/84136.Fantasy_Lover?from_search=true&from_srp=true&qid=NwUsLiA2Nc&rank=1', ...]
 
-    Notice that you should ONLY add URLs that start with "https://www.goodreads.com/book/show/" to
-    your list, and , and be sure to append the full path to the URL so that the url is in the format
+    Notice that you should ONLY add URLs that start with "https://www.goodreads.com/book/show/" to 
+    your list, and , and be sure to append the full path to the URL so that the url is in the format 
     “https://www.goodreads.com/book/show/kdkd".
 
     """
@@ -66,7 +66,7 @@ def get_book_summary(book_url):
     """
     Write a function that creates a BeautifulSoup object that extracts book
     information from a book's webpage, given the URL of the book. Parse through
-    the BeautifulSoup object, and capture the book title, book author, and number
+    the BeautifulSoup object, and capture the book title, book author, and number 
     of pages. This function should return a tuple in the following format:
 
     ('Some book title', 'the book's author', number of pages)
@@ -103,17 +103,42 @@ def summarize_best_books(filepath):
     filepath and return a list of (category, book title, URL) tuples.
 
     For example, if the best book in category "Fiction" is "The Testaments (The Handmaid's Tale, #2)", with URL
-    https://www.goodreads.com/choiceawards/best-fiction-books-2020, then you should append
-    ("Fiction", "The Testaments (The Handmaid's Tale, #2)", "https://www.goodreads.com/choiceawards/best-fiction-books-2020")
+    https://www.goodreads.com/choiceawards/best-fiction-books-2020, then you should append 
+    ("Fiction", "The Testaments (The Handmaid's Tale, #2)", "https://www.goodreads.com/choiceawards/best-fiction-books-2020") 
     to your list of tuples.
     """
-    pass
+    catList = []
+    bbList = []
+    urlList = []
+
+    file1 = open(filepath, 'r')
+    data = file1.read()
+    file1.close()
+
+    soup = BeautifulSoup(data, 'html.parser')
+    cat = soup.find_all("h4", class_ = 'category_copy')
+    for category in cat:
+        catList.append(category.text.strip())
+    print(catList)
+
+    bb = soup.find_all('img', class_ = 'category_winnerImage')
+    for book in bb:
+        title = book['alt']
+        bbList.append(title)
+    print(bbList)
+
+    urls = soup.find_all("div", class_ = "category clearFix")
+    for url in urls:
+        link = url['href']
+        urlList.append('http://www.goodreads.com' + link)
+    print(urlList)
+
 
 
 def write_csv(data, filename):
     """
     Write a function that takes in a list of tuples (called data, i.e. the
-    one that is returned by get_titles_from_search_results()), writes the data to a
+    one that is returned by get_titles_from_search_results()), writes the data to a 
     csv file, and saves it to the passed filename.
 
     The first row of the csv should contain "Book Title" and "Author Name", and
@@ -157,9 +182,9 @@ class TestCases(unittest.TestCase):
         for x in search_urls:
             self.assertIsInstance(x, tuple)
         # check that the first book and author tuple is correct (open search_results.htm and find it)
-            self.assertEqual(x[0], ('Harry Potter and the Deathly Hallows (Harry Potter, #7)', 'J.K. Rowling'))
+        self.assertEqual(search_urls[0], ('Harry Potter and the Deathly Hallows (Harry Potter, #7)', 'J.K. Rowling'))
         # check that the last title is correct (open search_results.htm and find it)
-            self.assertEqual(x[-1][0], 'Harry Potter: The Prequel (Harry Potter, #0.5)')
+        self.assertEqual(search_urls[-1][0], 'Harry Potter: The Prequel (Harry Potter, #0.5)')
 
     def test_get_search_links(self):
         # check that TestCases.search_urls is a list
