@@ -4,7 +4,7 @@ import re
 import os
 import csv
 import unittest
-#worked with: Grace Coleman
+#worked with: Grace Coleman and Giselle Ciulla
 
 
 def get_titles_from_search_results(filename):
@@ -43,8 +43,8 @@ def get_search_links():
 
     ['https://www.goodreads.com/book/show/84136.Fantasy_Lover?from_search=true&from_srp=true&qid=NwUsLiA2Nc&rank=1', ...]
 
-    Notice that you should ONLY add URLs that start with "https://www.goodreads.com/book/show/" to 
-    your list, and , and be sure to append the full path to the URL so that the url is in the format 
+    Notice that you should ONLY add URLs that start with "https://www.goodreads.com/book/show/" to
+    your list, and , and be sure to append the full path to the URL so that the url is in the format
     “https://www.goodreads.com/book/show/kdkd".
 
     """
@@ -66,7 +66,7 @@ def get_book_summary(book_url):
     """
     Write a function that creates a BeautifulSoup object that extracts book
     information from a book's webpage, given the URL of the book. Parse through
-    the BeautifulSoup object, and capture the book title, book author, and number 
+    the BeautifulSoup object, and capture the book title, book author, and number
     of pages. This function should return a tuple in the following format:
 
     ('Some book title', 'the book's author', number of pages)
@@ -103,42 +103,44 @@ def summarize_best_books(filepath):
     filepath and return a list of (category, book title, URL) tuples.
 
     For example, if the best book in category "Fiction" is "The Testaments (The Handmaid's Tale, #2)", with URL
-    https://www.goodreads.com/choiceawards/best-fiction-books-2020, then you should append 
-    ("Fiction", "The Testaments (The Handmaid's Tale, #2)", "https://www.goodreads.com/choiceawards/best-fiction-books-2020") 
+    https://www.goodreads.com/choiceawards/best-fiction-books-2020, then you should append
+    ("Fiction", "The Testaments (The Handmaid's Tale, #2)", "https://www.goodreads.com/choiceawards/best-fiction-books-2020")
     to your list of tuples.
     """
     catList = []
     bbList = []
     urlList = []
+    tups = []
 
     file1 = open(filepath, 'r')
     data = file1.read()
     file1.close()
 
     soup = BeautifulSoup(data, 'html.parser')
-    cat = soup.find_all("h4", class_ = 'category_copy')
+    cat = soup.find_all("h4", class_ = 'category__copy')
     for category in cat:
         catList.append(category.text.strip())
-    print(catList)
 
-    bb = soup.find_all('img', class_ = 'category_winnerImage')
+    bb = soup.find_all('img', class_ = 'category__winnerImage')
     for book in bb:
         title = book['alt']
         bbList.append(title)
-    print(bbList)
 
     urls = soup.find_all("div", class_ = "category clearFix")
     for url in urls:
-        link = url['href']
-        urlList.append('http://www.goodreads.com' + link)
-    print(urlList)
+        urlList.append(url.find('a')['href'])
+
+    for i in range(len(urlList)):
+        tup = (catList[i], bbList[i], urlList[i])
+        tups.append(tup)
+    return tups
 
 
 
 def write_csv(data, filename):
     """
     Write a function that takes in a list of tuples (called data, i.e. the
-    one that is returned by get_titles_from_search_results()), writes the data to a 
+    one that is returned by get_titles_from_search_results()), writes the data to a
     csv file, and saves it to the passed filename.
 
     The first row of the csv should contain "Book Title" and "Author Name", and
@@ -220,17 +222,19 @@ class TestCases(unittest.TestCase):
 
     def test_summarize_best_books(self):
         # call summarize_best_books and save it to a variable
-        summarize = self.summarize_best_books()
+        summarize = summarize_best_books("best_books_2020.htm")
         # check that we have the right number of best books (20)
         self.assertEqual(len(summarize), 20)
             # assert each item in the list of best books is a tuple
         for x in summarize:
             # check that each tuple has a length of 3
+            self.assertEqual(type(x), tuple)
             self.assertEqual(len(x), 3)
         # check that the first tuple is made up of the following 3 strings:'Fiction', "The Midnight Library", 'https://www.goodreads.com/choiceawards/best-fiction-books-2020'
-        self.assertEqual(x[0], ('Fiction', "The Midnight Library", 'https://www.goodreads.com/choiceawards/best-fiction-books-2020'))
+        self.assertEqual(summarize[0], ('Fiction', "The Midnight Library", 'https://www.goodreads.com/choiceawards/best-fiction-books-2020'))
         # check that the last tuple is made up of the following 3 strings: 'Picture Books', 'A Beautiful Day in the Neighborhood: The Poetry of Mister Rogers', 'https://www.goodreads.com/choiceawards/best-picture-books-2020'
-        self.assertEqual(x[-1], ('Picture Books', 'A Beautiful Day in the Neighborhood: The Poetry of Mister Rogers', 'https://www.goodreads.com/choiceawards/best-picture-books-2020'))
+        self.assertEqual(summarize[-1], ('Picture Books', 'Antiracist Baby', 'https://www.goodreads.com/choiceawards/best-picture-books-2020'))
+
 
     def test_write_csv(self):
         # call get_titles_from_search_results on search_results.htm and save the result to a variable
